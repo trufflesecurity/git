@@ -1080,7 +1080,7 @@ static int log_tree_diff(struct rev_info *opt, struct commit *commit, struct log
 	// Set a timeout of 10 seconds
     struct timespec start_time, current_time;
     clock_gettime(CLOCK_MONOTONIC, &start_time);
-    const int TIMEOUT_SEC = 10;
+    const int TIMEOUT_SEC = 1;
 
 	for (;;) {
 		struct commit *parent = parents->item;
@@ -1097,7 +1097,7 @@ static int log_tree_diff(struct rev_info *opt, struct commit *commit, struct log
         double elapsed_time = (double)(current_time.tv_sec - start_time.tv_sec) +
                               (double)(current_time.tv_nsec - start_time.tv_nsec) / 1e9;
         if (elapsed_time >= TIMEOUT_SEC) {
-            fprintf(stderr, "Diff operation timed out\n");
+            fprintf(stderr, "Diff operation timed out on commit: %s\n", hash_to_hex(commit->object.oid.hash));
             return -1;
         }
 
