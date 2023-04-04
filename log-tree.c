@@ -1076,6 +1076,12 @@ static int log_tree_diff(struct rev_info *opt, struct commit *commit, struct log
 	}
 
 	showed_log = 0;
+	
+	// Set a timeout of 10 seconds
+    struct timespec start_time, current_time;
+    clock_gettime(CLOCK_MONOTONIC, &start_time);
+    const int TIMEOUT_SEC = 10;
+
 	for (;;) {
 		struct commit *parent = parents->item;
 
@@ -1085,6 +1091,15 @@ static int log_tree_diff(struct rev_info *opt, struct commit *commit, struct log
 		log_tree_diff_flush(opt);
 
 		showed_log |= !opt->loginfo;
+
+		/* Check elapsed time and exit if timeout exceeded */
+        clock_gettime(CLOCK_MONOTONIC, &current_time);
+        double elapsed_time = (double)(current_time.tv_sec - start_time.tv_sec) +
+                              (double)(current_time.tv_nsec - start_time.tv_nsec) / 1e9;
+        if (elapsed_time >= TIMEOUT_SEC) {
+            fprintf(stderr, "Diff operation timed out\n");
+            return -1;
+        }
 
 		/* Set up the log info for the next parent, if any.. */
 		parents = parents->next;
