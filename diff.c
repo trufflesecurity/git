@@ -5627,7 +5627,6 @@ struct option *add_diff_options(const struct option *opts,
 			       PARSE_OPT_NOARG, diff_opt_follow),
 		OPT_INTEGER('l', NULL, &options->rename_limit,
 			    N_("prevent rename/copy detection if the number of rename/copy targets exceeds given limit")),
-
 		OPT_GROUP(N_("Diff algorithm options")),
 		OPT_CALLBACK_F(0, "minimal", options, NULL,
 			       N_("produce the smallest possible diff"),
@@ -6508,6 +6507,8 @@ static void diff_flush_patch_all_file_pairs(struct diff_options *o)
 	int i;
 	static struct emitted_diff_symbols esm = EMITTED_DIFF_SYMBOLS_INIT;
 	struct diff_queue_struct *q = &diff_queued_diff;
+	struct timespec start_time, current_time;
+	int timeout = o->timeout;
 
 	if (WSEH_NEW & WS_RULE_MASK)
 		BUG("WS rules bit mask overlaps with diff symbol flags");
@@ -6518,16 +6519,19 @@ static void diff_flush_patch_all_file_pairs(struct diff_options *o)
 	if (o->additional_path_headers)
 		create_filepairs_for_header_only_notifications(o);
 
-	struct timespec start_time, current_time;
-    clock_gettime(CLOCK_MONOTONIC, &start_time);
-    const int TIMEOUT_SEC = 5;
+	if (o->timeout > 0) {
+		clock_gettime(CLOCK_MONOTONIC, &start_time);
+	}
+
 	for (i = 0; i < q->nr; i++) {
-		clock_gettime(CLOCK_MONOTONIC, &current_time);
-        double elapsed_time = (double)(current_time.tv_sec - start_time.tv_sec) +
-                              (double)(current_time.tv_nsec - start_time.tv_nsec) / 1e9;
-        if (elapsed_time >= TIMEOUT_SEC) {
-            fprintf(stderr, "Diff operation timed out on patches: %d/%d\n", i, q->nr);
-			break;
+		if (timeout > 0) {
+			clock_gettime(CLOCK_MONOTONIC, &current_time);
+			double elapsed_time = (double)(current_time.tv_sec - start_time.tv_sec) +
+				(double)(current_time.tv_nsec - start_time.tv_nsec) / 1e9;
+			if (elapsed_time >= timeout) {
+				fprintf(stderr, "Diff operation timed out: %d/%d\n", i, q->nr);
+				break;
+			}
 		}
 
 		struct diff_filepair *p = q->queue[i];

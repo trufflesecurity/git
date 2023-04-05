@@ -1402,6 +1402,8 @@ void diffcore_rename_extended(struct diff_options *options,
 	struct inexact_prefetch_options prefetch_options = {
 		.repo = options->repo
 	};
+	int timeout = options->rename_timeout;
+	struct timespec start_time, current_time;
 
 	trace2_region_enter("diff", "setup", options->repo);
 	info.setup = 0;
@@ -1578,16 +1580,19 @@ void diffcore_rename_extended(struct diff_options *options,
 	}
 
 	CALLOC_ARRAY(mx, st_mult(NUM_CANDIDATE_PER_DST, num_destinations));
-	struct timespec start_time, current_time;
-    clock_gettime(CLOCK_MONOTONIC, &start_time);
-    const int TIMEOUT_SEC = 5;
+	if (timeout > 0) {
+		clock_gettime(CLOCK_MONOTONIC, &start_time);
+	}
+
 	for (dst_cnt = i = 0; i < rename_dst_nr; i++) {
-		clock_gettime(CLOCK_MONOTONIC, &current_time);
-        double elapsed_time = (double)(current_time.tv_sec - start_time.tv_sec) +
-                              (double)(current_time.tv_nsec - start_time.tv_nsec) / 1e9;
-        if (elapsed_time >= TIMEOUT_SEC) {
-            fprintf(stderr, "rename operation timed out on rename: %d/%d\n", i, rename_dst_nr);
-			break;
+		if (timeout > 0) {
+			clock_gettime(CLOCK_MONOTONIC, &current_time);
+			double elapsed_time = (double)(current_time.tv_sec - start_time.tv_sec) +
+				(double)(current_time.tv_nsec - start_time.tv_nsec) / 1e9;
+			if (elapsed_time >= timeout) {
+				fprintf(stderr, "Rename operation timed out: %d/%d\n", i, rename_dst_nr);
+				break;
+			}
 		}
 		struct diff_filespec *two = rename_dst[i].p->two;
 		struct diff_score *m;
