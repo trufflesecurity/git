@@ -6508,7 +6508,6 @@ static void diff_flush_patch_all_file_pairs(struct diff_options *o)
 	static struct emitted_diff_symbols esm = EMITTED_DIFF_SYMBOLS_INIT;
 	struct diff_queue_struct *q = &diff_queued_diff;
 	struct timespec start_time, current_time;
-	int timeout = o->timeout;
 
 	if (WSEH_NEW & WS_RULE_MASK)
 		BUG("WS rules bit mask overlaps with diff symbol flags");
@@ -6524,11 +6523,11 @@ static void diff_flush_patch_all_file_pairs(struct diff_options *o)
 	}
 
 	for (i = 0; i < q->nr; i++) {
-		if (timeout > 0) {
+		if (o->timeout > 0) {
 			clock_gettime(CLOCK_MONOTONIC, &current_time);
 			double elapsed_time = (double)(current_time.tv_sec - start_time.tv_sec) +
 				(double)(current_time.tv_nsec - start_time.tv_nsec) / 1e9;
-			if (elapsed_time >= timeout) {
+			if (elapsed_time >= o->timeout) {
 				fprintf(stderr, "Diff operation timed out: %d/%d\n", i, q->nr);
 				break;
 			}
