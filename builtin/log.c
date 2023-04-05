@@ -236,7 +236,6 @@ static void cmd_log_init_finish(int argc, const char **argv, const char *prefix,
 		.exclude_ref_config_pattern = &decorate_refs_exclude_config,
 	};
 	static struct revision_sources revision_sources;
-	fprintf(stderr, "yoooooo\n");
 
 	const struct option builtin_log_options[] = {
 
