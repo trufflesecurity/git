@@ -228,7 +228,7 @@ static void cmd_log_init_finish(int argc, const char **argv, const char *prefix,
 			 struct rev_info *rev, struct setup_revision_opt *opt)
 {
 	struct userformat_want w;
-	int quiet = 0, source = 0, mailmap;
+	int quiet = 0, source = 0, rename_timeout=0, diff_timeout =0, mailmap;
 	static struct line_opt_callback_data line_cb = {NULL, NULL, STRING_LIST_INIT_DUP};
 	struct decoration_filter decoration_filter = {
 		.exclude_ref_pattern = &decorate_refs_exclude,
@@ -238,6 +238,11 @@ static void cmd_log_init_finish(int argc, const char **argv, const char *prefix,
 	static struct revision_sources revision_sources;
 
 	const struct option builtin_log_options[] = {
+
+		OPT_INTEGER(0, "rename-timeout", &rename_timeout,
+			    N_("prevent rename detection from running if it takes longer than the given number of seconds")),
+		OPT_INTEGER(0, "diff-timeout", &diff_timeout,
+			    N_("prevent diffs from running if it takes longer than the given number of seconds")),
 		OPT__QUIET(&quiet, N_("suppress diff output")),
 		OPT_BOOL(0, "source", &source, N_("show source")),
 		OPT_BOOL(0, "use-mailmap", &mailmap, N_("use mail map file")),
@@ -266,6 +271,9 @@ static void cmd_log_init_finish(int argc, const char **argv, const char *prefix,
 			     builtin_log_options, builtin_log_usage,
 			     PARSE_OPT_KEEP_ARGV0 | PARSE_OPT_KEEP_UNKNOWN_OPT |
 			     PARSE_OPT_KEEP_DASHDASH);
+
+	rev->diffopt.rename_timeout = rename_timeout;
+	rev->diffopt.timeout = diff_timeout;
 
 	if (quiet)
 		rev->diffopt.output_format |= DIFF_FORMAT_NO_OUTPUT;

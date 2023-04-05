@@ -257,6 +257,7 @@ struct diff_options {
 	int skip_instead_of_rotate;
 	int rotate_to_strict;
 
+
 	/**
 	 * A constant string (can and typically does contain newlines to look for
 	 * a block of text, not just a single line) to filter out the filepairs
@@ -309,6 +310,9 @@ struct diff_options {
 	 */
 	int rename_score;
 	int rename_limit;
+
+	int rename_timeout;
+	int timeout;
 
 	int needed_rename_limit;
 	int degraded_cc_to_c;
